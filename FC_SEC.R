@@ -114,12 +114,33 @@ SEC_max_matrix<- SEC_df_HHPV_max %>% select(nc_max:x3_max) %>%
                   as.matrix 
 rownames(SEC_max_matrix) <-  SEC_df_HHPV_max$entry
 
-jpeg("Heatmap.jpeg",width=2000,height=10000, units="px", pointsize = 1, res=300)
+SEC_nctox3 <- SEC_df_HHPV_max %>% select(entry, nc_max:x3_max) %>% 
+                        filter((nc_max > x1_max) & (x1_max > x2_max) & (x2_max > x3_max))
+SEC_nctox3_matrix <- SEC_nctox3 %>% select(nc_max:x3_max) %>% as.matrix 
+rownames(SEC_nctox3_matrix) <- SEC_nctox3$entry
+
+SEC_x3tonc <- SEC_df_HHPV_max %>% select(entry, nc_max:x3_max) %>% 
+                        filter((nc_max < x1_max) & (x1_max < x2_max) & (x2_max < x3_max))
+SEC_x3tonc_matrix <- SEC_x3tonc %>% select(x3_max:nc_max) %>% as.matrix 
+rownames(SEC_x3tonc_matrix) <- SEC_x3tonc$entry
+
+jpeg("SEC_Heatmap.jpeg",width=2000,height=10000, units="px", pointsize = 1, res=300)
 Heatmap(SEC_max_matrix, name = "Intensity", row_dend_width = unit(4, "cm"),
+        column_dend_height = unit(5, "cm"),
+        row_names_gp = gpar(fontsize = 5), km = 20)
+dev.off()
+
+jpeg("SEC_nctox3.jpeg",width=2000,height=10000, units="px", pointsize = 1, res=300)
+Heatmap(SEC_nctox3_matrix, name = "Intensity", row_dend_width = unit(4, "cm"),
              column_dend_height = unit(5, "cm"),
         row_names_gp = gpar(fontsize = 5), km = 20)
 dev.off()
 
+jpeg("SEC_x3tonc.jpeg",width=2000,height=3000, units="px", pointsize = 1, res=300)
+Heatmap(SEC_x3tonc_matrix, name = "Intensity", row_dend_width = unit(4, "cm"),
+        column_dend_height = unit(5, "cm"), colorRamp2(c(0, 12, 25)),
+        row_names_gp = gpar(fontsize = 5), km = 20)
+dev.off()
 
 # PCA ---------------------------------------------------------------------
 
