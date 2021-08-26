@@ -124,6 +124,11 @@ SEC_x3tonc <- SEC_df_HHPV_max %>% select(entry, nc_max:x3_max) %>%
 SEC_x3tonc_matrix <- SEC_x3tonc %>% select(x3_max:nc_max) %>% as.matrix 
 rownames(SEC_x3tonc_matrix) <- SEC_x3tonc$entry
 
+plist <- list(SEC_nctox3_matrix, SEC_x3tonc_matrix)
+names(plist) <- c("SEC_nctox3", "SEC_x3tonc")
+
+iwalk(plist, ~write.csv(.x, paste0(.y, ".csv")))
+
 jpeg("SEC_Heatmap.jpeg",width=2000,height=10000, units="px", pointsize = 1, res=300)
 Heatmap(SEC_max_matrix, name = "Intensity", row_dend_width = unit(4, "cm"),
         column_dend_height = unit(5, "cm"),
