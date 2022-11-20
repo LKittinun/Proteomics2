@@ -1,6 +1,6 @@
 library(janitor)
 
-# DEP -------------------------------------------------------------------------------------------------------------
+# DEP --------------------------------------------------------------------------
 
 # BiocManager::install("DEP")
 library(DEP)
@@ -8,14 +8,15 @@ library(SummarizedExperiment)
 library(dplyr)
 
 # The raw data from Aj. Aim is log2 transformed, so we need to transform back first
-UC_dfpwr2 <- UC_df_HHPV %>% mutate(across(.cols = starts_with(c("nc","x")), ~ifelse(.x == 0, NA, .))) %>% 
+UC_dfpwr2 <- UC_df_HHPV %>% mutate(across(.cols = starts_with(c("nc","x")), 
+                                          ~ifelse(.x == 0, NA, .))) %>% 
                   mutate(across(.cols = starts_with(c("nc","x")), ~2^(.x)))
 glimpse(UC_dfpwr2)
 
 unique_UC_df <- make_unique(UC_dfpwr2, "gene_names", "entry")
 glimpse(unique_UC_df)
 colnames(UC_dfpwr2)
-
+UC_dfpwr$gene_names
 
 data_col <- UC_dfpwr2 %>% select(nc_ev1:x3_ev3) %>% colnames
 data_col
@@ -33,6 +34,7 @@ df_SE <- make_se(unique_UC_df,
                  metadata_UC)
 get_df_wide(df_SE) %>% View()
 
+View(assay(df_filt))
 plot_numbers(df_SE)
 plot_coverage(df_SE)
 plot_missval(df_SE)
@@ -106,6 +108,7 @@ walk(dep_list, function(x) {
   plot_volcano(dep, contrast = x, adjusted = FALSE, plot = TRUE) +
   geom_point(color = "darkred") 
   ggsave(filename = paste0(x, ".png"))} ) 
+
 
 # Test 
 

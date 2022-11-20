@@ -4,11 +4,11 @@ library(readxl)
 
 futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
 
-df <- read_xlsx("Source/Proteomics_Cervix.xlsx", sheet = "raw")
+df <- read_xlsx("Source/Proteomics2.xlsx", sheet = "GR1_pool SEC")
 
 df <- clean_names(df)
 
-
+df %>% View
 # Clean data -----------------------------------------------------
 
 df_cleaned <- df %>% 
@@ -22,7 +22,7 @@ unique(df_cleaned$organism) # A lot
 
 pattern <- c("sapiens", "papilloma")
 
-df_HHPV <- df_cleaned %>% 
+df_HHPV <-df_cleaned %>% 
   filter(grepl(paste(pattern, collapse = "|"), organism)) %>% 
   filter(status == "reviewed")
 
@@ -47,6 +47,6 @@ glimpse(UC_df_HHPV)
 
 glimpse(df)
 
-SEC_df_HHPV <- df_HHPV %>% 
-  select(-"x1", -starts_with("max"), -matches("_ev[0-9]+"))
-  
+SEC_df_HHPV <- df_HHPV 
+  # select(-"x1", -starts_with("max"), -matches("_ev[0-9]+"))
+SEC_df_HHPV  

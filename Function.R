@@ -77,12 +77,12 @@ draw_2venn_prop <-function(lists, filename = NULL, cex = 0.25, cat.cex = 0.3,
 fc_calculator <- function(columns, filters = NULL, data, n){
   
   list <- data %>% 
-    filter(if (!is.null(filters)) entry %in% filters else entry %in% entry) %>% 
-    select(entry, contains(columns[1]), contains(columns[2])) %>%  
+    filter(if (!is.null(filters)) entry_name %in% filters else entry_name %in% entry_name) %>% 
+    select(entry_name, contains(columns[1]), contains(columns[2]), entry, protein_name) %>%  
     print() %>% 
     mutate(log2fc = .[[2]] - .[[3]], abs_log2fc = abs(log2fc)) %>%   # column 2 and column 3
 #           log2fc = log2(fc), abs_log2fc = abs(log2fc)) %>% # already log2fc
-    mutate(Change = ifelse(log2fc < 0, "Decrease", "Increase")) %>%
+    mutate(Change = ifelse(log2fc < 0, "Downregulated", "Upregulated")) %>%
     group_by(Change)
   
   message("Make list: pass")
@@ -90,25 +90,27 @@ fc_calculator <- function(columns, filters = NULL, data, n){
   top_list <- list %>%
     slice_max(order_by = abs_log2fc, n = n) %>%
     arrange(desc(Change), desc(abs_log2fc)) %>%
-    mutate(entry = forcats::fct_reorder(entry, log2fc))
+    mutate(entry_name = forcats::fct_reorder(entry_name, log2fc)) %>% 
+    relocate(c("entry", "protein_name"), .after = entry_name)
 
   message("Top list production: pass")
   
   half_top_list <- list %>%
     slice_max(order_by = abs_log2fc, n = floor(n/2)) %>%
     arrange(desc(Change), desc(abs_log2fc)) %>%
-    mutate(entry = forcats::fct_reorder(entry, log2fc))
+    mutate(entry_name = forcats::fct_reorder(entry_name, log2fc))
   
   message("Half top list production: pass")
   
   max_value <- max(half_top_list$abs_log2fc)
-  p <-ggplot(half_top_list, aes(x = entry, y = log2fc, fill = Change)) +
+  p <- ggplot(half_top_list, aes(x = entry_name, y = log2fc, fill = Change)) +
     geom_col() +
     coord_flip() +
-    scale_fill_discrete(breaks=c("Increase","Decrease")) +
+    scale_fill_discrete(breaks=c("Upregulated","Downregulated")) +
     scale_y_continuous(limits = c(-max_value, max_value)) +
     labs(x = "Entry Name", y = "Log2 Fold Change") +
     ggtitle(paste0(columns[1], " VS ", columns[2])) +
+    theme(text = element_text(size= 8))
 
   ggsave(filename = paste0(columns[1], "_", columns[2], ".png"))      
   

@@ -2,23 +2,31 @@ library(dplyr)
 library(janitor)
 library(purrr)
 library(tidyr)
-library(VennDiagram)
 library(RColorBrewer)
 
 futile.logger::flog.threshold(futile.logger::ERROR, name = "VennDiagramLogger")
 
 # Max value
-SEC_df_HHPV_max <- SEC_df_HHPV %>% rowwise() %>% 
-  mutate(nc_max = max(c_across(starts_with("nc")))) %>% 
-  mutate(x1_max = max(c_across(starts_with("x1")))) %>%
-  mutate(x2_max = max(c_across(starts_with("x2")))) %>%
-  mutate(x3_max = max(c_across(starts_with("x3")))) %>%
+# SEC_df_HHPV_max <- SEC_df_HHPV %>% rowwise() %>% 
+#   mutate(nc_max = max(c_across(starts_with("nc")))) %>% 
+#   mutate(x1_max = max(c_across(starts_with("x1")))) %>%
+#   mutate(x2_max = max(c_across(starts_with("x2")))) %>%
+#   mutate(x3_max = max(c_across(starts_with("x3")))) %>%
+#   select(-(nc_sec8:x3_sec10)) %>% 
+#   ungroup()
+SEC_df_HHPV_max <- SEC_df_HHPV %>% 
   select(-(nc_sec8:x3_sec10)) %>% 
+  rename(entry=uniprot_number_entry) %>% 
+  rowwise() %>% 
+  mutate(Healthy = max_sec_nc) %>% 
+  mutate(Cancer = max(c_across(max_sec_i:max_sec_iii))) %>% 
   ungroup()
-  
+
+glimpse(SEC_df_HHPV_max)
+
 # Create Name list
 name_list <- SEC_df_HHPV_max %>% 
-      select(nc_max:x3_max) %>% 
+      select(Healthy, Cancer) %>% 
       names()
 
 dim(SEC_df_HHPV_max)
@@ -27,15 +35,14 @@ dim(SEC_df_HHPV_max)
 
 # Extract protein list
 
-mapped_entry <- SEC_df_HHPV_max %>% select(entry, nc_max:x3_max) %>% 
- pivot_longer(-entry, names_to = "category", values_to = "intensity") %>% 
+mapped_entry <- SEC_df_HHPV_max %>% select(entry, entry_name, Healthy, Cancer) %>% 
+ pivot_longer(-c(entry, entry_name), names_to = "category", values_to = "intensity") %>% 
   group_by(category) %>% 
   filter(intensity != 0) %>% 
   nest() 
 
-mapped_entry$data
-SEC_protein_list <- setNames(map(mapped_entry$data, ~.x %>% pull(entry)), name_list)
-SEC_protein_list
+SEC_protein_list <- setNames(map(mapped_entry$data, ~.x %>% pull(entry_name)), name_list)
+setNames(map(mapped_entry$data, ~.x %>% pull(entry_name)), name_list)
 
 # Venn Diagram ------------------------------------------------------------
 
@@ -93,19 +100,19 @@ SEC_list_intersect <- map(pair_list, ~SEC_protein_list[.x]) %>%
                             attributes %>% 
                             .[["intersections"]] %>% .[[1]])
 names(SEC_list_intersect) <- names(pair_list)
-
+SEC_list_intersect
 iwalk(SEC_list_intersect, ~write_csv(.x, file = paste0(.y, ".csv")))
 
 # Equal to VennDiagram
 sapply(SEC_list_intersect, length) 
 pair_list
-# 
 
 library(ggplot2)
 library(readr)
 
 walk2(pair_list, SEC_list_intersect,
       ~fc_calculator(.x, .y, data = SEC_df_HHPV_max, 50))
+
 
 # Heatmap
 library(ComplexHeatmap)
